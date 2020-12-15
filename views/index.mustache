@@ -1,0 +1,244 @@
+<html>
+
+<head>
+    <base href="/">
+    <title>Apptunix Movie Rate</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"></script>
+
+</head>
+<style>
+   .container {
+    border: 1px solid rgba(0, 0, 0, .11);
+    ;
+    padding: 10px;
+    width: 1000px
+}
+.controls-item {
+    display: inline-block;
+}
+
+.btn {
+    margin: 1px;
+}
+</style>
+
+<body>
+    <div class="container">
+
+    
+    <h1>Post Reviews and rating</h1>
+    
+    <div>
+        <form action="/reviews" method="post" id="form"><br><br>
+            <div id="demo">
+                <label>Email</label>
+              <input placeholder="Enter Email" name="email" type="email" id="myText"/>
+              <label>Rating</label>
+              <input placeholder="Rate Me" name="rating" type="number" max="5"/>
+              <label>Comment</label>
+              <input type="text" name="review" placeholder="Type Review" />
+        
+            </div>
+            <div ><p>{{error}}<p></div>
+            <button type="submit" class="btn btn-sm btn-info"  onclick="showError()">Add Reviews</button>
+        </form>
+       </div> 
+
+       <button class="btn btn-sm btn-info" id="btn">Total Rating Count</button>
+       <div id="mypanel" style="display: none;"><p>Total Rating:{{total}}    Average Rating:{{average}}</p></div>
+
+        
+       <div class="row">
+           <div class="col-xs-12">
+               <p><button class="btn btn-sm btn-info" onclick="sortTable()">Sort Table</button></p>
+               <table class="table table-dark" id="myTable">
+               <thead> 
+                <tr>
+                  <th>Email</th>
+                  <th>Rating</th>
+                  <th>Review</th>
+                </tr>
+                </thead>
+               <tbody id="table-body">
+                {{#reviews}}
+                <tr>
+                    
+                    <td>{{email}}</td>
+                    <td>{{rating}}</td>
+                    <td>{{review}}</td>
+                    
+                </tr>
+                {{/reviews}}
+                </tbody> 
+                </table>
+                
+           </div>
+       </div>
+        <div class="container ">
+              <div id="pagination-wrapper"></div>
+              
+        </div>
+        
+    </div>
+    <script >
+        
+        $("#btn").on('click', function() {
+            $("#mypanel").show();
+        });
+
+        function sortTable() {
+            var table, rows, switching, i, x, y, shouldSwitch;
+            table = document.getElementById("myTable");
+            switching = true;
+            console.log(table.rows[2].cells.item(2).innerHTML);
+            while (switching) {
+              switching = false;
+              rows = table.rows;
+              
+              for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                
+                x = rows[i].getElementsByTagName("TD")[1];
+                y = rows[i + 1].getElementsByTagName("TD")[1];
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+              if (shouldSwitch) {
+                
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                }
+        }
+      }
+
+
+
+              var tableData = new Array();
+                  table = document.getElementById("myTable");
+                  for( i = 1; i<(table.rows.length-1);i++){
+                    var myrow = {
+                        email:'',
+                        rating: null,
+                        review:''
+                    }
+                    myrow.email = table.rows[i].cells.item(0).innerHTML;
+                    myrow.rating = table.rows[i].cells.item(1).innerHTML;
+                    myrow.review = table.rows[i].cells.item(2).innerHTML;
+
+                    tableData.push(myrow);
+                    
+                  }
+                  console.log(tableData);
+
+
+              function showError(){
+                var data =  document.getElementById("myText").value;
+                console.log(tableData.indexOf(data) == -1);
+              }
+                  
+                  
+                      var state = {
+                            'querySet': tableData,
+                            'page': 1,
+                            'rows': 5,
+                            'window': 5,
+                        }
+
+                        //buildTable()
+                        var data = pagination(state.querySet, state.page, state.rows)
+                        //var len= Math.floor((tableData.length-1)/5)+1;
+                        pageButtons(data.pages);
+
+                        function pagination(querySet, page, rows) {
+
+                            var trimStart = (page - 1) * rows
+                            var trimEnd = trimStart + rows
+
+                            var trimmedData = querySet.slice(trimStart, trimEnd)
+
+                            var pages = Math.floor((querySet.length-1) / rows)+1;
+
+                            return {
+                                'querySet': trimmedData,
+                                'pages': pages,
+                            }
+                        }
+
+                        function pageButtons(pages) {
+                            var wrapper = document.getElementById('pagination-wrapper')
+
+                            wrapper.innerHTML = ``
+                          console.log('Pages:', pages)
+
+                            var maxLeft = (state.page - Math.floor(state.window / 2))
+                            var maxRight = (state.page + Math.floor(state.window / 2))
+
+                            if (maxLeft < 1) {
+                                maxLeft = 1
+                                maxRight = state.window
+                            }
+
+                            if (maxRight > pages) {
+                                maxLeft = pages - (state.window - 1)
+                                
+                                if (maxLeft < 1){
+                                  maxLeft = 1
+                                }
+                                maxRight = pages
+                            }
+                            
+                            
+
+                            for (var page = maxLeft; page <= maxRight; page++) {
+                              wrapper.innerHTML += `<button value=${page} class="page btn btn-sm btn-info">${page}</button>`
+                            }
+
+                            if (state.page != 1) {
+                                wrapper.innerHTML = `<button value=${1} class="page btn btn-sm btn-info">&#171; First</button>` + wrapper.innerHTML
+                            }
+
+                            if (state.page != pages) {
+                                wrapper.innerHTML += `<button value=${pages} class="page btn btn-sm btn-info">Last &#187;</button>`
+                            }
+
+                            $('.page').on('click', function() {
+                                $('#table-body').empty()
+
+                                state.page = Number($(this).val())
+
+                                buildTable()
+                            })
+
+                        }
+
+
+                        function buildTable() {
+                            var table = $('#table-body')
+                            
+                            var data = pagination(state.querySet, state.page, state.rows)
+                            var myList = data.querySet
+                            //console.log(myList);
+                            for (var i = 1 in myList) {
+                                //Keep in mind we are using "Template Litterals to create rows"
+                                var row = `<tr>
+                                          <td>${myList[i].email}</td>
+                                          <td>${myList[i].rating}</td>
+                                          <td>${myList[i].review}</td>
+                                          `
+                                table.append(row)
+                            }
+
+                            pageButtons(data.pages)
+                        }
+
+    </script>
+</body>
+
+</html>
